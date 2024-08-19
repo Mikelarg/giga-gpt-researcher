@@ -23,8 +23,11 @@ class Scraper:
         Args:
             urls:
         """
+        import urllib3
+        urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         self.urls = urls
         self.session = requests.Session()
+        self.session.verify = False
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
 

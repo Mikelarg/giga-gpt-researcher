@@ -5,11 +5,12 @@ import json
 sample_revision_notes = """
 {
   "draft": { 
-    draft title: The revised draft that you are submitting for review 
+    название черновика: Пересмотренный черновик, который ты отправляешь на рецензирование 
   },
-  "revision_notes": Your message to the reviewer about the changes you made to the draft based on their feedback
+  "revision_notes": Твое сообщение рецензенту о внесённых изменениях в черновик на основе его комментариев
 }
 """
+
 
 class ReviserAgent:
     def __init__(self, websocket=None, stream_output=None, headers=None):
@@ -26,21 +27,29 @@ class ReviserAgent:
         review = draft_state.get("review")
         task = draft_state.get("task")
         draft_report = draft_state.get("draft")
-        prompt = [{
-            "role": "system",
-            "content": "You are an expert writer. Your goal is to revise drafts based on reviewer notes."
-        }, {
-            "role": "user",
-            "content": f"""Draft:\n{draft_report}" + "Reviewer's notes:\n{review}\n\n
-You have been tasked by your reviewer with revising the following draft, which was written by a non-expert.
-If you decide to follow the reviewer's notes, please write a new draft and make sure to address all of the points they raised.
-Please keep all other aspects of the draft the same.
-You MUST return nothing but a JSON in the following format:
+        prompt = [
+            {
+                "role": "system",
+                "content": "Ты эксперт в написании текстов. Твоя задача — доработать черновики на основе замечаний рецензента.",
+            },
+            {
+                "role": "user",
+                "content": f"""Черновик:\n{draft_report}" + "Замечания рецензента:\n{review}\n\n
+Твой рецензент поручил вам доработать следующий черновик, который был написан не экспертом.
+Если ты решишь следовать замечаниям рецензента, пожалуйста, напиши новый черновик и убедись, что ты учел все поднятые им вопросы.
+Пожалуйста, оставь все остальные аспекты черновика без изменений.
+ТЫ ДОЛЖЕН ОБЯЗАТЕЛЬНО вернуть JSON в следующем формате:
 {sample_revision_notes}
-"""
-        }]
+""",
+            },
+        ]
 
-        response = await call_model(prompt, model=task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
+        response = await call_model(
+            prompt,
+            model=task.get("model"),
+            response_format="json",
+            api_key=self.headers.get("openai_api_key"),
+        )
         return json.loads(response)
 
     async def run(self, draft_state: dict):
@@ -49,9 +58,18 @@ You MUST return nothing but a JSON in the following format:
 
         if draft_state.get("task").get("verbose"):
             if self.websocket and self.stream_output:
-                await self.stream_output("logs", "revision_notes", f"Revision notes: {revision.get('revision_notes')}", self.websocket)
+                await self.stream_output(
+                    "logs",
+                    "revision_notes",
+                    f"Revision notes: {revision.get('revision_notes')}",
+                    self.websocket,
+                )
             else:
-                print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
+                print_agent_output(
+                    f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR"
+                )
 
-        return {"draft": revision.get("draft"),
-                "revision_notes": revision.get("revision_notes")}
+        return {
+            "draft": revision.get("draft"),
+            "revision_notes": revision.get("revision_notes"),
+        }

@@ -19,6 +19,9 @@ def get_llm(llm_provider, **kwargs):
         case "openai":
             from ..llm_provider import OpenAIProvider
             llm_provider = OpenAIProvider
+        case "gigachat":
+            from ..llm_provider import GigaChatProvider
+            llm_provider = GigaChatProvider
         case "azureopenai":
             from ..llm_provider import AzureOpenAIProvider
             llm_provider = AzureOpenAIProvider

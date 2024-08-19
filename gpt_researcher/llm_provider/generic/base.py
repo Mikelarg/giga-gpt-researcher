@@ -82,6 +82,10 @@ class GenericLLMProvider:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatBedrock(**kwargs)
+        elif provider == "gigachat":
+            from langchain_community.chat_models import GigaChat
+
+            llm = GigaChat(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(

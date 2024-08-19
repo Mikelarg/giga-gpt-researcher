@@ -19,7 +19,7 @@ class BeautifulSoupScraper:
         occurs during the process, an error message is printed and an empty string is returned.
         """
         try:
-            response = self.session.get(self.link, timeout=4)
+            response = self.session.get(self.link, timeout=20)
             soup = BeautifulSoup(
                 response.content, "lxml", from_encoding=response.encoding
             )

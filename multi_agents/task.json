@@ -1,5 +1,5 @@
 {
-  "query": "Is AI in a hype cycle?",
+  "query": "GigaChat - Технологическое Превосходство ИИ Сбера",
   "max_sections": 3,
   "publish_formats": {
     "markdown": true,
@@ -8,11 +8,10 @@
   },
   "include_human_feedback": true,
   "follow_guidelines": false,
-  "model": "gpt-4o",
+  "model": "GigaChat-Pro",
   "guidelines": [
-    "The report MUST be written in APA format",
-    "Each sub section MUST include supporting sources using hyperlinks. If none exist, erase the sub section or rewrite it to be a part of the previous section",
-    "The report MUST be written in spanish"
+"Отчёт ДОЛЖЕН быть написан в формате APA",
+"Каждый подраздел ДОЛЖЕН включать поддерживающие источники с использованием гиперссылок. Если их нет, удали подраздел или перепиши его, чтобы он стал частью предыдущего раздела"
   ],
   "verbose": true
 }

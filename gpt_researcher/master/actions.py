@@ -72,6 +72,10 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import CustomRetriever
 
             retriever = CustomRetriever
+        case "yandex":
+            from gpt_researcher.retrievers import YandexSearch
+
+            retriever = YandexSearch
 
         case _:
             retriever = None
@@ -359,6 +363,7 @@ async def summarize_url(
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
     return summary
 
+
 async def generate_draft_section_titles(
     query: str,
     context,
@@ -368,9 +373,11 @@ async def generate_draft_section_titles(
     cfg,
     main_topic: str = "",
     cost_callback: callable = None,
-    headers=None
+    headers=None,
 ) -> str:
-    assert report_type == "subtopic_report", "This function is only for subtopic reports"
+    assert (
+        report_type == "subtopic_report"
+    ), "This function is only for subtopic reports"
     content = f"{generate_draft_titles_prompt(query, main_topic, context)}"
     try:
         draft_section_titles = await create_chat_completion(
@@ -386,8 +393,9 @@ async def generate_draft_section_titles(
         )
     except Exception as e:
         print(f"{Fore.RED}Error in generate_draft_section_titles: {e}{Style.RESET_ALL}")
-    
+
     return draft_section_titles
+
 
 async def generate_report(
     query: str,
@@ -425,11 +433,15 @@ async def generate_report(
     """
     generate_prompt = get_prompt_by_report_type(report_type)
     report = ""
+    if isinstance(context, list):
+        context_inline = "\n".join(context)
+    else:
+        context_inline = context
 
     if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context_inline, report_format=cfg.report_format, total_words=cfg.total_words)}"
         if tone:
-            content += f", tone={tone}"
+            content += f", tone={tone.value}"
         summary = await create_chat_completion(
             model=cfg.fast_llm_model,
             messages=[
@@ -442,9 +454,9 @@ async def generate_report(
             cost_callback=cost_callback,
         )
     else:
-        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        content = f"{generate_prompt(query, context_inline, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
         if tone:
-            content += f", tone={tone}"
+            content += f", tone={tone.value}"
         summary = await create_chat_completion(
             model=cfg.fast_llm_model,
             messages=[
@@ -567,6 +579,7 @@ def extract_headers(markdown_text: str):
 
     return headers  # Return the list of headers
 
+
 def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     """
     Extract all written sections from subtopic report
@@ -583,21 +596,21 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     """
     sections = []
     parsed_md = markdown.markdown(markdown_text)
-    
+
     # Use regex to find all headers and their content
-    pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
+    pattern = r"<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)"
     matches = re.findall(pattern, parsed_md, re.DOTALL)
-    
+
     for title, content in matches:
         # Clean up the content
-        clean_content = re.sub(r'<.*?>', '', content).strip()
+        clean_content = re.sub(r"<.*?>", "", content).strip()
         if clean_content:
-            sections.append({
-                "section_title": title.strip(),
-                "written_content": clean_content
-            })
-    
+            sections.append(
+                {"section_title": title.strip(), "written_content": clean_content}
+            )
+
     return sections
+
 
 def table_of_contents(markdown_text: str):
     try:

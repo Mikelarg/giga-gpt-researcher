@@ -24,15 +24,18 @@ def generate_search_queries_prompt(
         report_type == ReportType.DetailedReport.value
         or report_type == ReportType.SubtopicReport.value
     ):
-        task = f"{parent_query} - {question}"
+        return (
+            f"Составь {max_iterations} поисковых запросов в Яндекс для онлайн-поиска, чтобы сформировать объективное мнение по следующей теме. "
+            f'Ты должен генерировать запросы основываясь на подтеме, но учитывай контекст основной темы. Основная тема: "{parent_query}" Подтема: "{question}"'
+            f'Ты должен ответить списком строк в следующем формате: ["запрос 1", "запрос 2", "запрос 3"].\n'
+            f"Ответ должен содержать ТОЛЬКО список."
+        )
     else:
-        task = question
-
-    return (
-        f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"'
-        f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].\n'
-        f"The response should contain ONLY the list."
-    )
+        return (
+            f'Составь {max_iterations} поисковых запросов в Яндекс для онлайн-поиска, чтобы сформировать объективное мнение по следующей теме: "{question}"'
+            f'Ты должен ответить списком строк в следующем формате: ["запрос 1", "запрос 2", "запрос 3"].\n'
+            f"Ответ должен содержать ТОЛЬКО список."
+        )
 
 
 def generate_report_prompt(
@@ -52,38 +55,39 @@ def generate_report_prompt(
     reference_prompt = ""
     if report_source == ReportSource.Web.value:
         reference_prompt = f"""
-You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
-Every url should be hyperlinked: [url website](url)
-Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+ОБЯЗАТЕЛЬНО укажи все использованные источники и их URL-адреса в конце отчёта и убедиться, что нет дублирующихся источников — только одна ссылка для каждого.
+Каждый источник должен быть ссылкой. Пример: [url website](url)
+Кроме того, ОБЯЗАТЕЛЬНО включи источники на соответствующие URL-адреса везде, где они упомянуты в отчёте:
 
-eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+Пример: Автор, А. А. (Год, Месяц Дата). Название веб-страницы. Название сайта. [url website](url)
 """
     else:
         reference_prompt = f"""
-You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+ТЫ ДОЛЖЕН указать все использованные имена исходных документов в конце отчёта в качестве ссылок и убедиться, что нет дублирующихся источников — только одна ссылка для каждого."
 """
 
-    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+    tone_prompt = f"Напиши отчёт в {tone.value} тоне." if tone else ""
 
     return f"""
-Information: "{context}"
+Информация: 
+========
+{context}
+========
 ---
-Using the above information, answer the following query or task: "{question}" in a detailed report --
-The report should focus on the answer to the query, should be well structured, informative, 
-in-depth, and comprehensive, with facts and numbers if available and a minimum of {total_words} words.
-You should strive to write the report as long as you can using all relevant and necessary information provided.
+Используя приведенную выше информацию, ответьте на следующий вопрос: "{question}" в подробном отчете.
+Отчет должен быть сосредоточен на ответе на вопрос, быть хорошо структурированным, информативным, глубоким и всесторонним, с указанием фактов и чисел, если они доступны, и содержать минимум {total_words} слов.
+Ты должен стремиться написать отчет максимально объемно, используя всю предоставленную и необходимую информацию.
 
-Please follow all of the following guidelines in your report:
-- You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
-- You MUST write the report with markdown syntax and {report_format} format.
-- Use an unbiased and journalistic tone.
-- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
-- Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
+Пожалуйста, следуй всем следующим рекомендациям при составлении отчета:
+- Ты ДОЛЖЕН сформировать собственное обоснованное выводы на основе предоставленной информации. НЕ ДЕЛАЙ неопределенные и бессмысленные выводы.
+- Ты ДОЛЖЕН написать отчет с использованием синтаксиса markdown и в формате {report_format}.
+- Используй беспристрастный и журналистский тон.
+- Используй внутритекстовые ссылки на источники в формате {report_format} и создавай их с помощью гиперссылок в конце предложения или абзаца следующим образом: ([внутритекстовая ссылка](url)).
 - {reference_prompt}
 - {tone_prompt}
-
-Please do your best, this is very important to my career.
-Assume that the current date is {date.today()}.
+- ОБЯЗАТЕЛЬНО добавь список литературы в конце отчета в формате {report_format} и полные ссылки URL без гиперссылок.
+Старайся выполнить работу наилучшим образом, это очень важно для меня.
+Текущая дата {date.today()}.
 """
 
 
@@ -103,24 +107,24 @@ def generate_resource_report_prompt(
     reference_prompt = ""
     if report_source == ReportSource.Web.value:
         reference_prompt = f"""
-            You MUST include all relevant source urls.
-            Every url should be hyperlinked: [url website](url)
-            """
+            ТЫ ДОЛЖЕН включить все соответствующие URL-адреса источников.
+            Каждый URL должен быть гиперссылкой: [url website](url)
+        """
     else:
         reference_prompt = f"""
-            You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+            Ты ДОЛЖЕН указать все использованные имена исходных документов в конце отчёта в качестве ссылок и убедиться, что нет дублирующихся источников — только одна ссылка для каждого."
         """
 
     return (
-        f'"""{context}"""\n\nBased on the above information, generate a bibliography recommendation report for the following'
-        f' question or topic: "{question}". The report should provide a detailed analysis of each recommended resource,'
-        " explaining how each source can contribute to finding answers to the research question.\n"
-        "Focus on the relevance, reliability, and significance of each source.\n"
-        "Ensure that the report is well-structured, informative, in-depth, and follows Markdown syntax.\n"
-        "Include relevant facts, figures, and numbers whenever available.\n"
-        f"The report should have a minimum length of {total_words} words.\n"
-        "You MUST include all relevant source urls."
-        "Every url should be hyperlinked: [url website](url)"
+        f'"""{context}"""\n\nНа основе приведённой выше информации создайте отчёт с рекомендациями по библиографии для следующего'
+        f' вопроса или темы: "{question}". Отчёт должен содержать подробный анализ каждого рекомендованного ресурса,'
+        " объясняя, как каждый источник может помочь в поиске ответов на исследовательский вопрос.\n"
+        "Сосредоточься на актуальности, надёжности и значимости каждого источника.\n"
+        "Убедись, что отчёт хорошо структурирован, информативен и соответствует синтаксису Markdown.\n"
+        "Включай соответствующие факты, данные и цифры.\n"
+        f"Отчёт должен быть длиной не менее {total_words} слов.\n"
+        "ТЫ ДОЛЖЕН включить все соответствующие URL-адреса источников."
+        "Каждый URL должен быть гиперссылкой: [url website](url)"
         f"{reference_prompt}"
     )
 
@@ -141,11 +145,11 @@ def generate_outline_report_prompt(
     """
 
     return (
-        f'"""{context}""" Using the above information, generate an outline for a research report in Markdown syntax'
-        f' for the following question or topic: "{question}". The outline should provide a well-structured framework'
-        " for the research report, including the main sections, subsections, and key points to be covered."
-        f" The research report should be detailed, informative, in-depth, and a minimum of {total_words} words."
-        " Use appropriate Markdown syntax to format the outline and ensure readability."
+        f'"""{context}""" Используя приведённую выше информацию, создай структуру исследовательского отчёта в синтаксисе Markdown'
+        f' для следующего вопроса или темы: "{question}". Структура должна предоставлять хорошо организованный каркас'
+        " для исследовательского отчёта, включая основные разделы, подразделы и ключевые моменты, которые необходимо осветить."
+        f" Исследовательский отчёт должен быть детализированным, информативным, глубоким и содержать минимум {total_words} слов."
+        " Используй соответствующий синтаксис Markdown для форматирования структуры и обеспечения её читабельности."
     )
 
 
@@ -162,28 +166,28 @@ def get_report_by_type(report_type: str):
 
 def auto_agent_instructions():
     return """
-This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
-Agent
-The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
+Эта задача включает исследование заданной темы, независимо от её сложности или наличия окончательного ответа. Исследование проводится определённым сервером, который определяется его типом и ролью, при этом каждый сервер требует особых инструкций.
+Агент
+Определяется областью темы и конкретным именем агента, который может быть использован для исследования предложенной темы. Агенты классифицируются по их области экспертизы, и каждый тип агента связан с соответствующим эмодзи.
 
-examples:
-task: "should I invest in apple stocks?"
-response: 
+примеры:
+задача: "стоит ли инвестировать в акции Apple?"
+ответ: 
 {
-    "server": "💰 Finance Agent",
-    "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
+    "server": "💰 Финансовый агент",
+    "agent_role_prompt": "Ты — опытный ИИ-помощник аналитика финансов. Твоя основная задача — составлять всесторонние, продуманные, беспристрастные и методически структурированные финансовые отчёты на основе предоставленных данных и тенденций."
 }
-task: "could reselling sneakers become profitable?"
-response: 
+задача: "может ли перепродажа кроссовок стать прибыльной?"
+ответ: 
 { 
-    "server":  "📈 Business Analyst Agent",
-    "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
+    "server":  "📈 Агент бизнес-аналитики",
+    "agent_role_prompt": "Ты — опытный ИИ-помощник бизнес-аналитика. Твоя основная цель — создавать всесторонние, проницательные, беспристрастные и систематически структурированные бизнес-отчёты на основе предоставленных бизнес-данных, рыночных тенденций и стратегического анализа."
 }
-task: "what are the most interesting sites in Tel Aviv?"
-response:
+задача: "какие самые интересные места в Тель-Авиве?"
+ответ:
 {
-    "server:  "🌍 Travel Agent",
-    "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
+    "server":  "🌍 Туристический агент",
+    "agent_role_prompt": "Ты — ИИ-помощник гида, объехавший весь мир. Твоя основная задача — составлять увлекательные, информативные, беспристрастные и хорошо структурированные туристические отчёты по заданным местам, включая историю, достопримечательности и культурные особенности."
 }
 """
 
@@ -196,9 +200,9 @@ def generate_summary_prompt(query, data):
     """
 
     return (
-        f'{data}\n Using the above text, summarize it based on the following task or query: "{query}".\n If the '
-        f"query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual "
-        f"information such as numbers, stats, quotes, etc if available. "
+        f'{data}\n Используя приведённый выше текст, составь его краткое содержание на основе следующей задачи или запроса: "{query}".\n Если '
+        f"запрос невозможно ответить, используя текст, ТЫ ДОЛЖЕН кратко изложить текст.\n Включи всю фактическую "
+        f"информацию, такую как числа, статистика, цитаты и т.д., если они доступны. "
     )
 
 
@@ -209,22 +213,22 @@ def generate_summary_prompt(query, data):
 
 def generate_subtopics_prompt() -> str:
     return """
-Provided the main topic:
+Основная тема:
 
 {task}
 
-and research data:
+и данные исследования:
 
 {data}
 
-- Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
-- These are a possible list of subtopics : {subtopics}.
-- There should NOT be any duplicate subtopics.
-- Limit the number of subtopics to a maximum of {max_subtopics}
-- Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+- Составь список подтем, которые будут представлять собой заголовки разделов отчёта, создаваемого по задаче.
+- Это возможный список подтем: {subtopics}.
+- НЕ должно быть никаких дублирующихся подтем.
+- Ограничь количество подтем до {max_subtopics}.
+- В завершение отсортируй подтемы по задачам в соответствующем и осмысленном порядке, который будет представляем в подробном отчёте.
 
-"IMPORTANT!":
-- Every subtopic MUST be relevant to the main topic and provided research data ONLY!
+"ВАЖНО!":
+- Каждая подтема ДОЛЖНА быть релевантна основной теме и предоставленным данным исследования!
 
 {format_instructions}
 """
@@ -241,108 +245,114 @@ def generate_subtopic_report_prompt(
     total_words=800,
     tone: Tone = Tone.Objective,
 ) -> str:
-    return f"""
-"Context":
-"{context}"
+    return f"""Информация: 
+=========
+{context}
+=========
 
-"Main Topic and Subtopic":
-Using the latest information available, construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
-You must limit the number of subsections to a maximum of {max_subsections}.
+"Основная тема и подтема":
+Используя самую актуальную информацию, составь подробный отчёт по подтеме: {current_subtopic} в рамках основной темы: {main_topic}.
+Необходимо ограничить количество подразделов до {max_subsections}.
 
-"Content Focus":
-- The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
-- Use markdown syntax and follow the {report_format.upper()} format.
+"Содержание":
+- Отчёт должен быть направлен на ответ на подтему
+- Отчет должен быть хорошо структурированным, информативным и включать факты и цифры, если они доступны.
+- Используй синтаксис Markdown и следуй формату {report_format.upper()}.
 
-"IMPORTANT:Content and Sections Uniqueness":
-- This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
-- Carefully review the existing headers and existing written contents provided below before writing any new subsections.
-- Prevent any content that is already covered in the existing written contents.
-- Do not use any of the existing headers as the new subsection headers.
-- Do not repeat any information already covered in the existing written contents or closely related variations to avoid duplicates.
-- If you have nested subsections, ensure they are unique and not covered in the existing written contents.
-- Ensure that your content is entirely new and does not overlap with any information already covered in the previous subtopic reports.
+"ВАЖНО: Уникальность содержания и разделов":
+- Эта часть инструкций является ОБЯЗАТЕЛЬНОЙ для обеспечения уникальности содержания и исключения совпадений с существующими отчётами.
+- ВНИМАТЕЛЬНО изучи существующие заголовки и написанные материалы, приведённые ниже, прежде чем писать новые подразделы.
+- !!!ИЗБЕГАЙ содержания, которое уже было освещено в существующих материалах.
+- !!!НЕ ИСПОЛЬЗУЙ существующие заголовки в качестве новых заголовков подразделов.
+- !!!НЕ ПОВТОРЯЙ информацию, уже освещённую в существующих материалах, или схожие варианты, чтобы избежать дублирования.
+- Если ты добавляешь вложенные подразделы, ОБЯЗАТЕЛЬНО убедись, что они уникальны и не освещены в существующих материалах.
+- Убедись, что твое содержание полностью новое и не пересекается с информацией, уже освещённой в предыдущих отчётах по подтемам.
 
-"Existing Subtopic Reports":
-- Existing subtopic reports and their section headers:
-
+"Существующие отчёты по подтемам":
+- Существующие отчёты по подтемам и их заголовки разделов:
     {existing_headers}
 
-- Existing written contents from previous subtopic reports:
-
+- Существующие материалы из предыдущих отчётов по подтемам:
     {relevant_written_contents}
 
-"Structure and Formatting":
-- As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction or conclusion section.
+"Структура и форматирование":
+- Поскольку этот подотчёт будет частью более крупного отчёта, напиши только основную часть, разделённую на подходящие подтемы, БЕЗ! введения и заключения.
+- В ТВОЕМ ОТЧЕТЕ НЕ ДОЛЖНО БЫТЬ ПОДРАЗДЕЛА "Введение"
+- В ТВОЕМ ОТЧЕТЕ НЕ ДОЛЖНО БЫТЬ ПОДРАЗДЕЛА "Заключение"
+- В ТВОЕМ ТЕКСТЕ ПОСЛЕ КАЖДОЙ СМЫСЛОВ ЧАСТИ ДОЛЖЕН БЫТЬ ИСТОЧНИК ("[1](ссылка)"), откуда была взята информация для формирования этой части
+- !!!ОБЯЗАТЕЛЬНО ВКЛЮЧИ В СВОЕМ ТЕКСТЕ ИСТОЧНИКИ на соответствующие URL-адреса, которые ты использовал в отчёте. ПРИМЕР:
 
-- You MUST include markdown hyperlinks to relevant source URLs wherever referenced in the report, for example:
-
-    ### Section Header
+    ### Заголовок раздела
     
-    This is a sample text. ([url website](url))
+    Это пример текста требущий источника. ([url website](url))
 
-- Use H2 for the main subtopic header (##) and H3 for subsections (###).
-- Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
-- Organize your content into distinct sections that complement but do not overlap with existing reports.
-- When adding similar or identical subsections to your report, you should clearly indicate the differences between and the new content and the existing written content from previous subtopic reports. For example:
+- Используй H2 для основного заголовка подтемы (##) и H3 для подразделов (###).
+- Используй меньшие заголовки Markdown (например, H2 или H3) для структуры содержания, избегая использования самого большого заголовка (H1), так как он будет использоваться для заголовка более крупного отчёта.
+- Организуй свое содержание в отдельные разделы, которые дополняют, но не пересекаются с существующими отчётами.
+- При добавлении схожих или идентичных подразделов в свой отчёт, ты должен чётко указать различия между новым содержанием и существующими материалами из предыдущих отчётов по подтемам. Например:
 
-    ### New header (similar to existing header)
+    ### Новый заголовок (схож с существующим заголовком)
 
-    While the previous section discussed [topic A], this section will explore [topic B]."
+    В то время как предыдущий раздел обсуждал [тему А], этот раздел будет исследовать [тему Б].
 
-"Date":
-Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+"Дата":
+Текущая дата — {datetime.now(timezone.utc).strftime('%B %d, %Y')}
 
-"IMPORTANT!":
-- The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
-- Must NOT have any introduction, conclusion, summary or reference section.
-- You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
-- You MUST mention the difference between the existing content and the new content in the report if you are adding the similar or same subsections wherever necessary.
-- The report should have a minimum length of {total_words} words.
-- Use an {tone.value} tone throughout the report.
+"ВАЖНО!":
+- Основное внимание ДОЛЖНО быть сосредоточено на основной теме! Ты ДОЛЖЕН исключить любую информацию, не связанную с ней!
+- !!НЕ ПИШИ!! введения, заключения, резюме или раздела с источниками.
+- ОБЯЗАТЕЛЬНО включи гиперссылки с синтаксисом Markdown ([url website](url)), связанные с предложениями, где это необходимо.
+- ОБЯЗАТЕЛЬНО УПОМЯНИ различия между существующим и новым содержанием в отчёте, если добавляете схожие или идентичные подразделы, где это необходимо.
+- Отчёт должен иметь минимальную длину {total_words} слов.
+- Пиши в {tone.value} ключе на протяжении всего отчёта.
+- В ТВОЕМ ТЕКСТЕ ПОСЛЕ КАЖДОЙ СМЫСЛОВ ЧАСТИ ОБЯЗАТЕЛЬНО ДОЛЖЕН БЫТЬ ИСТОЧНИК ("[1](ссылка)"), откуда была взята информация для формирования этой части
+
+Начни свой отчет с H2 раздела с названием "{current_subtopic}"
+Не забывай про подразделы H3
+Не забывай добавлять источники в подразделах
+Ни в коем случае не добавляй "Заключение" 
 """
 
 
 def generate_draft_titles_prompt(
-    current_subtopic: str,
-    main_topic: str,
-    context: str,
-    max_subsections: int = 5
+    current_subtopic: str, main_topic: str, context: str, max_subsections: int = 5
 ) -> str:
     return f"""
-"Context":
+"Контекст":
 "{context}"
 
-"Main Topic and Subtopic":
-Using the latest information available, construct a draft section title headers for a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+"Основная тема и подтема":
+Используя самую актуальную информацию, составь черновые заголовки разделов для подробного отчёта по подтеме: {current_subtopic} в рамках основной темы: {main_topic}.
 
-"Task":
-1. Create a list of draft section title headers for the subtopic report.
-2. Each header should be concise and relevant to the subtopic.
-3. The header should't be too high level, but detailed enough to cover the main aspects of the subtopic.
-4. Use markdown syntax for the headers, using H3 (###) as H1 and H2 will be used for the larger report's heading.
-5. Ensure the headers cover main aspects of the subtopic.
+"Задача":
+1. Создай список черновых заголовков разделов для отчёта по подтеме.
+2. Каждый заголовок должен быть кратким и соответствовать подтеме.
+3. Заголовок не должен быть слишком общим, но достаточно детализированным, чтобы охватить основные аспекты подтемы.
+4. Используй синтаксис Markdown для заголовков, используя H3 (###), так как H1 и H2 будут использоваться для заголовков более крупного отчёта.
+5. Убедись, что заголовки охватывают основные аспекты подтемы.
 
-"Structure and Formatting":
-Provide the draft headers in a list format using markdown syntax, for example:
+"Структура и форматирование":
+Предоставь черновые заголовки в формате списка, используя синтаксис Markdown, например:
 
-### Header 1
-### Header 2
-### Header 3
+### Заголовок 1
+### Заголовок 2
+### Заголовок 3
 
-"IMPORTANT!":
-- The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
-- Must NOT have any introduction, conclusion, summary or reference section.
-- Focus solely on creating headers, not content.
+"ВАЖНО!":
+- Основное внимание ДОЛЖНО быть сосредоточено на основной теме! Ты ДОЛЖЕН исключить любую информацию, не связанную с ней!
+- НЕ должно быть введения, заключения, резюме или раздела с источниками.
+- Сосредоточься исключительно на создании заголовков, а не содержимого.
 """
 
+
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
-    return f"""{research_summary}\n 
-Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
-- The introduction should be succinct, well-structured, informative with markdown syntax.
-- As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
-- The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-- You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
-Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+    return f"""{research_summary}\n
+Используя приведённую выше актуальную информацию, подготовь подробное введение к отчёту на тему — {question}.
+- Введение должно быть кратким, хорошо структурированным, информативным и оформленным в синтаксисе Markdown.
+- Поскольку это введение будет частью более крупного отчёта, НЕ включай другие разделы, которые обычно присутствуют в отчётах.
+- Перед введением должен быть заголовок H1 с подходящей темой для всего отчёта.
+- Ты должен включить гиперссылки с синтаксисом Markdown ([url website](url)), связанные с предложениями, где это необходимо.
+Если требуется, предположите, что текущая дата — {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
 """
 
 

@@ -47,7 +47,8 @@ class Config:
         """Parse the retriever string into a list of retrievers and validate them."""
         VALID_RETRIEVERS = [
             "arxiv", "bing", "custom", "duckduckgo", "exa", "google", "searx",
-            "semantic_scholar", "serpapi", "serper", "tavily", "pubmed_central"
+            "semantic_scholar", "serpapi", "serper", "tavily", "pubmed_central",
+            "yandex"
         ]
         retrievers = [retriever.strip() for retriever in retriever_str.split(',')]
         invalid_retrievers = [r for r in retrievers if r not in VALID_RETRIEVERS]
