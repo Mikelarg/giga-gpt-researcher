@@ -179,9 +179,9 @@ async def handle_json_error(response):
             print(f"Error decoding JSON: {e}")
 
     print("No JSON found in the string. Falling back to Default Agent.")
-    return "Default Agent", (
-        "You are an AI critical thinker research assistant. Your sole purpose is to write well written, "
-        "critically acclaimed, objective and structured reports on given text."
+    return "Агент", (
+        "Ты — ИИ-ассистент, c критическим мышлением. Твоя единственная цель — писать хорошо составленные, "
+        "высоко оцененные, объективные и структурированные отчёты по заданному тексту."
     )
 
 
@@ -440,34 +440,8 @@ async def generate_report(
 
     if report_type == "subtopic_report":
         content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context_inline, report_format=cfg.report_format, total_words=cfg.total_words)}"
-        if tone:
-            content += f", tone={tone.value}"
-        summary = await create_chat_completion(
-            model=cfg.fast_llm_model,
-            messages=[
-                {"role": "system", "content": agent_role_prompt},
-                {"role": "user", "content": content},
-            ],
-            temperature=0,
-            llm_provider=cfg.llm_provider,
-            llm_kwargs=cfg.llm_kwargs,
-            cost_callback=cost_callback,
-        )
     else:
         content = f"{generate_prompt(query, context_inline, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
-        if tone:
-            content += f", tone={tone.value}"
-        summary = await create_chat_completion(
-            model=cfg.fast_llm_model,
-            messages=[
-                {"role": "system", "content": agent_role_prompt},
-                {"role": "user", "content": content},
-            ],
-            temperature=0,
-            llm_provider=cfg.llm_provider,
-            llm_kwargs=cfg.llm_kwargs,
-            cost_callback=cost_callback,
-        )
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,

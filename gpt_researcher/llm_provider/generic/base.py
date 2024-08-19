@@ -85,6 +85,9 @@ class GenericLLMProvider:
         elif provider == "gigachat":
             from langchain_community.chat_models import GigaChat
 
+            if kwargs.get("temperature", 0) <= 0:
+                kwargs["temperature"] = 0.01
+
             llm = GigaChat(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
@@ -93,7 +96,6 @@ class GenericLLMProvider:
                 f"{supported}"
             )
         return cls(llm)
-
 
     async def get_chat_response(self, messages, stream, websocket=None):
         if not stream:
@@ -117,13 +119,14 @@ class GenericLLMProvider:
                 paragraph += content
                 if "\n" in paragraph:
                     if websocket is not None:
-                        await websocket.send_json({"type": "report", "output": paragraph})
+                        await websocket.send_json(
+                            {"type": "report", "output": paragraph}
+                        )
                     else:
                         print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
                     paragraph = ""
 
         return response
-
 
 
 _SUPPORTED_PROVIDERS = {
@@ -140,7 +143,9 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
+    "gigachat",
 }
+
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
