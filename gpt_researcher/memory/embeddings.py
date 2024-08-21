@@ -49,7 +49,8 @@ class Memory:
                 _embeddings = HuggingFaceEmbeddings()
             case "gigachat":
                 from langchain_community.embeddings import GigaChatEmbeddings
-                _embeddings = GigaChatEmbeddings(model="EmbeddingsGigaR")
+
+                _embeddings = GigaChatEmbeddings()
 
             case _:
                 raise Exception("Embedding provider not found.")
