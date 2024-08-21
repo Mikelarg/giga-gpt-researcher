@@ -4,9 +4,48 @@
 
 Начало работы:
 1. `pip install -r requirements.txt`
-2. Заполнить .env файл на примере .env.example
+2. Заполнить .env файл на примере .env.example . Более подробно про настройку .env переменных в разделе ниже
 3. Пример работы можно посмотреть в файле `example.py` и в `multi_agents/main.py`
 
+## Env переменнные
+Чтобы gpt-researcher заработал из коробки нужно проставить следующие переменные
+`OPENAI_API_KEY`, `YANDEX_API_KEY`, `YANDEX_FOLDER_ID` и проставить авторизационные данные для GigaChat
+Также по умолчанию используются OpenAI эмбединги, поэтому нужно проект запускать под VPN
+Эмбединги гигачата, также можно использовать это описано ниже
+### Настройка LLM
+За то на чем будет работать gpt-researcher отвечает переменная **LLM_PROVIDER**
+для неё возможные следующие значения `gigachat`, `openai`
+#### GigaChat
+Чтобы отработала GigaChat, нужно также прописать нужные env переменные для авторизации
+Чтобы задать настройки с помощью переменных окружения, используйте префикс `GIGACHAT_`.
+
+Авторизация с помощью токена и отключение проверки сертификатов:
+
+```sh
+export GIGACHAT_CREDENTIALS=...
+export GIGACHAT_SCOPE=...
+export GIGACHAT_VERIFY_SSL_CERTS=False
+```
+
+Авторизация с помощью логина и пароля:
+
+```sh
+export GIGACHAT_BASE_URL=https://gigachat.devices.sberbank.ru/api/v1
+export GIGACHAT_USER=...
+export GIGACHAT_PASSWORD=...
+```
+#### OpenAI
+Чтобы отработал ChatGPT, нужно убрать переменные `FAST_LLM_MODEL` и `SMART_LLM_MODEL`
+И проставить переменную `OPENAI_API_KEY`
+
+### Эмбединги
+Эмбединги проставляется переменной *EMBEDDING_PROVIDER* здесь можно прописать `gigachat` или `openai` 
+### Поиск
+Поиск проставляется переменной *RETRIEVER*, весь список возможных поисков описан в файле .env.example
+Чтобы попробовать поиск без API-ключей, можно проставить поиск в значение `duckduckgo`
+
+
+Более подробная документация gpt-researcher ниже
 .
 
 .
