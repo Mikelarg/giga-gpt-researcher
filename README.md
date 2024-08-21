@@ -5,7 +5,7 @@
 Начало работы:
 1. `pip install -r requirements.txt`
 2. Заполнить .env файл на примере .env.example
-3. Пример работы можно посмотреть в файле `example.py`
+3. Пример работы можно посмотреть в файле `example.py` и в `multi_agents/main.py`
 
 .
 
